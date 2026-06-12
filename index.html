@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sieve — PhD Research Matching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0D1117;
+  --ink-2: #1C2333;
+  --ink-3: #2D3748;
+  --surface: #F7F8FA;
+  --surface-2: #EDEEF2;
+  --border: #E2E4EA;
+  --border-strong: #C8CAD4;
+  --text: #0D1117;
+  --text-2: #4A5568;
+  --text-3: #8A94A6;
+  --accent: #B8FF4F;
+  --accent-dark: #8FD400;
+  --accent-glow: rgba(184,255,79,0.15);
+  --blue: #3B6FE8;
+  --blue-light: #EEF2FD;
+  --green: #12B76A;
+  --green-light: #ECFDF3;
+  --amber: #F59E0B;
+  --amber-light: #FFFBEB;
+  --red-light: #FEF2F2;
+  --red: #EF4444;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--surface); color: var(--text); line-height: 1.6; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 54px;
+}
+.nav-logo { display: flex; align-items: center; gap: 8px; }
+.nav-logo-mark {
+  width: 28px; height: 28px; background: var(--accent);
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+}
+.nav-logo-mark svg { width: 16px; height: 16px; }
+.nav-logo-name { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.02em; }
+.nav-logo-name span { color: var(--accent); }
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-tab {
+  padding: 6px 14px; border-radius: 7px; font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; font-family: inherit;
+  background: transparent; color: rgba(255,255,255,0.5); transition: all 0.15s;
+}
+.nav-tab:hover { color: #fff; background: rgba(255,255,255,0.07); }
+.nav-tab.active { color: var(--ink); background: var(--accent); }
+.nav-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  padding: 2px 7px; border-radius: 20px;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4);
+  margin-left: 8px;
+}
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── HERO ── */
+.hero {
+  background: var(--ink);
+  padding: 5rem 2rem 4rem;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(184,255,79,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+.hero-headline {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 600; color: #fff;
+  line-height: 1.15; letter-spacing: -0.03em;
+  max-width: 700px; margin: 0 auto 1.25rem;
+}
+.hero-headline em { color: var(--accent); font-style: normal; }
+.hero-sub {
+  font-size: 1.05rem; color: rgba(255,255,255,0.5);
+  max-width: 520px; margin: 0 auto 2.5rem; line-height: 1.7;
+}
+.hero-stats {
+  display: flex; justify-content: center; gap: 3rem;
+  margin-bottom: 2.5rem;
+}
+.hero-stat-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem; font-weight: 500; color: #fff; display: block;
+}
+.hero-stat-num span { color: var(--accent); }
+.hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.35); display: block; margin-top: 2px; }
+.hero-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); color: var(--ink);
+  font-weight: 600; font-size: 14px; padding: 12px 28px;
+  border-radius: 8px; border: none; cursor: pointer; font-family: inherit;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.hero-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(184,255,79,0.35); }
+.hero-cta svg { width: 16px; height: 16px; }
+
+/* ── HOW IT WORKS ── */
+.how { padding: 4rem 2rem; max-width: 900px; margin: 0 auto; }
+.section-eyebrow {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.section-title { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+.section-sub { font-size: 14px; color: var(--text-2); margin-bottom: 2.5rem; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+.step {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1.5rem; position: relative;
+}
+.step-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+  color: var(--text-3); margin-bottom: 12px; display: block;
+}
+.step-icon {
+  width: 40px; height: 40px; background: var(--ink); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
+}
+.step-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+.step h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.step p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+.step-connector {
+  position: absolute; right: -14px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  z-index: 1; font-size: 11px; color: var(--text-3);
+}
+
+/* ── STUDENT FLOW ── */
+.student-layout {
+  max-width: 900px; margin: 0 auto; padding: 2rem;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;
+}
+.form-panel {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem;
+}
+.form-panel h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.form-panel .sub { font-size: 12px; color: var(--text-3); margin-bottom: 1.25rem; }
+.field { margin-bottom: 14px; }
+.field label {
+  font-size: 11px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  display: block; margin-bottom: 5px;
+}
+textarea, input[type=text], select {
+  width: 100%; font-size: 13px; padding: 9px 12px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); color: var(--text); font-family: inherit; line-height: 1.5;
+  transition: border-color 0.15s;
+}
+textarea { resize: vertical; min-height: 80px; }
+textarea:focus, input[type=text]:focus, select:focus {
+  outline: none; border-color: var(--blue); background: #fff;
+  box-shadow: 0 0 0 3px rgba(59,111,232,0.1);
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn {
+  cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; color: var(--text); transition: all 0.15s;
+}
+.btn:hover { background: var(--surface-2); }
+.btn-primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn-primary:hover { background: var(--ink-3); }
+.btn-accent { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+.btn-accent:hover { background: var(--accent-dark); }
+.btn-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+/* ── RESULTS PANEL ── */
+.results-panel { display: flex; flex-direction: column; gap: 10px; }
+.results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 4px;
+}
+.results-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.results-count {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--text-3); background: var(--surface-2);
+  padding: 2px 8px; border-radius: 20px;
+}
+
+/* ── MATCH CARD ── */
+.match-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem; transition: border-color 0.15s, transform 0.15s;
+}
+.match-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.match-card.rank-1 { border-color: #B8FF4F; }
+.match-top { display: flex; align-items: flex-start; gap: 10px; }
+.avatar {
+  width: 36px; height: 36px; min-width: 36px; border-radius: 50%;
+  background: var(--ink); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+}
+.match-info { flex: 1; min-width: 0; }
+.match-name { font-size: 13px; font-weight: 600; color: var(--text); display: block; margin-bottom: 1px; }
+.match-name:hover { color: var(--blue); text-decoration: underline; }
+.match-sub { font-size: 11px; color: var(--text-3); }
+.signal-meter { display: flex; gap: 3px; align-items: flex-end; margin-left: auto; }
+.signal-bar {
+  width: 5px; border-radius: 2px; background: var(--border);
+  transition: background 0.4s, height 0.4s;
+}
+.signal-bar.lit { background: var(--accent); }
+.match-score-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--text-3); text-align: center; margin-top: 3px;
+}
+.match-signal-wrap { display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 44px; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.tag {
+  font-size: 10px; padding: 2px 7px; border-radius: 20px;
+  background: var(--surface-2); color: var(--text-3); font-weight: 500;
+}
+.tag.hit { background: #F0FDE8; color: #3A6A00; border: 1px solid #B8E870; }
+.empty-state {
+  background: #fff; border: 1px dashed var(--border); border-radius: var(--radius-lg);
+  padding: 2.5rem 1.5rem; text-align: center; color: var(--text-3); font-size: 13px;
+}
+.empty-state svg { width: 32px; height: 32px; stroke: var(--border-strong); fill: none; stroke-width: 1.5; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+
+/* ── FIT CARD ── */
+.fit-card-wrap {
+  background: var(--ink); border-radius: var(--radius-lg); padding: 1.5rem;
+  margin-top: 8px; position: relative; overflow: hidden;
+}
+.fit-card-wrap::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(184,255,79,0.12) 0%, transparent 70%);
+}
+.fit-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.fit-card-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.fit-card-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+  background: var(--accent); color: var(--ink); padding: 2px 8px; border-radius: 20px;
+}
+.fit-card-name { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+.fit-card-sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-bottom: 12px; }
+.fit-card-section { margin-bottom: 10px; }
+.fit-card-section label {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em;
+  display: block; margin-bottom: 3px;
+}
+.fit-card-section p { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+.fit-card-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.fit-card-pill {
+  font-size: 11px; padding: 3px 9px; border-radius: 20px;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+}
+.fit-card-actions { display: flex; gap: 8px; margin-top: 14px; }
+.fit-card-btn {
+  font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 7px;
+  cursor: pointer; font-family: inherit; border: none; transition: all 0.15s;
+}
+.fit-card-btn.send { background: var(--accent); color: var(--ink); }
+.fit-card-btn.send:hover { background: var(--accent-dark); }
+.fit-card-btn.preview { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+.fit-card-btn.preview:hover { background: rgba(255,255,255,0.14); }
+
+/* ── SUPERVISOR PANEL ── */
+.sup-layout {
+  max-width: 960px; margin: 0 auto; padding: 2rem;
+  display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; align-items: start;
+}
+.sup-sidebar {
+  display: flex; flex-direction: column; gap: 12px; position: sticky; top: 70px;
+}
+.sidebar-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem;
+}
+.sidebar-card h3 { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.pref-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pref-label { font-size: 12px; color: var(--text-2); flex: 1; }
+.pref-val {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+  color: var(--accent-dark); background: #F0FDE8; padding: 2px 6px;
+  border-radius: 4px; min-width: 52px; text-align: center;
+}
+input[type=range] {
+  width: 80px; accent-color: var(--ink);
+}
+.stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-box {
+  background: var(--surface); border-radius: 8px; padding: 10px 12px; text-align: center;
+}
+.stat-box .n {
+  font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 500;
+  color: var(--text); display: block;
+}
+.stat-box .l { font-size: 10px; color: var(--text-3); display: block; margin-top: 1px; }
+
+/* ── INBOX ── */
+.inbox { display: flex; flex-direction: column; gap: 8px; }
+.inbox-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
+}
+.inbox-title { font-size: 15px; font-weight: 600; }
+.inbox-subtitle { font-size: 12px; color: var(--text-3); }
+.inbox-actions { display: flex; gap: 6px; }
+.inbox-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr auto;
+  gap: 12px; align-items: start; transition: border-color 0.15s;
+}
+.inbox-card:hover { border-color: var(--border-strong); }
+.inbox-card.tier-high { border-left: 3px solid var(--green); }
+.inbox-card.tier-med { border-left: 3px solid var(--amber); }
+.inbox-card.tier-low { border-left: 3px solid var(--border); }
+.inbox-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.inbox-meta { font-size: 11px; color: var(--text-3); margin-bottom: 5px; }
+.inbox-excerpt { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+.inbox-score-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.tier-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.tier-badge.high { background: var(--green-light); color: #0A6641; }
+.tier-badge.med { background: var(--amber-light); color: #92400E; }
+.tier-badge.low { background: var(--surface-2); color: var(--text-3); }
+.inbox-card-actions { display: flex; gap: 6px; margin-top: 8px; }
+.action-btn {
+  font-size: 11px; font-weight: 500; padding: 5px 10px; border-radius: 6px;
+  cursor: pointer; font-family: inherit; border: 1px solid var(--border);
+  background: transparent; color: var(--text-2); transition: all 0.15s;
+}
+.action-btn:hover { background: var(--surface-2); }
+.action-btn.invite { border-color: var(--green); color: var(--green); }
+.action-btn.invite:hover { background: var(--green-light); }
+.action-btn.decline { color: var(--text-3); }
+
+/* ── DEPT PANEL ── */
+.dept-layout { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.dept-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.dept-stat {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+.dept-stat .big {
+  font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 500;
+  color: var(--text); letter-spacing: -0.02em; display: block; margin-bottom: 2px;
+}
+.dept-stat .big .accent { color: var(--green); }
+.dept-stat .label { font-size: 12px; color: var(--text-3); }
+.dept-stat .delta {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--green); background: var(--green-light);
+  padding: 1px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;
+}
+.dept-chart-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+.chart-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem;
+}
+.chart-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+.bar-chart { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-row .bar-label { font-size: 11px; color: var(--text-2); min-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { flex: 1; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; background: var(--ink); transition: width 0.6s ease; }
+.bar-fill.accent { background: var(--accent-dark); }
+.bar-fill.muted { background: var(--border-strong); }
+.bar-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-3); min-width: 24px; text-align: right; }
+.funnel { display: flex; flex-direction: column; gap: 6px; }
+.funnel-row { display: flex; align-items: center; justify-content: space-between; }
+.funnel-label { font-size: 12px; color: var(--text-2); }
+.funnel-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text); }
+.funnel-bar-wrap { flex: 1; margin: 0 12px; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+.funnel-fill { height: 100%; border-radius: 2px; }
+.table-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem;
+}
+.table-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase;
+  letter-spacing: 0.07em; text-align: left; padding: 0 8px 8px 0; border-bottom: 1px solid var(--border); }
+td { font-size: 12px; padding: 9px 8px 9px 0; border-bottom: 1px solid var(--surface-2); color: var(--text-2); vertical-align: middle; }
+td:first-child { color: var(--text); font-weight: 500; }
+tr:last-child td { border-bottom: none; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+.dot-green { background: var(--green); }
+.dot-amber { background: var(--amber); }
+.dot-gray { background: var(--border-strong); }
+.capacity-bar { display: flex; gap: 2px; }
+.cap-seg { width: 8px; height: 8px; border-radius: 2px; background: var(--surface-2); }
+.cap-seg.filled { background: var(--ink); }
+.cap-seg.over { background: var(--red); }
+
+/* ── ASK CLAUDE ROW ── */
+.ask-claude {
+  background: var(--ink); border-radius: var(--radius-lg); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px;
+}
+.ask-claude-text { font-size: 12px; color: rgba(255,255,255,0.5); flex: 1; min-width: 180px; }
+.ask-claude-text strong { color: rgba(255,255,255,0.85); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 999;
+  background: var(--ink); color: #fff; font-size: 13px; font-weight: 500;
+  padding: 10px 18px; border-radius: 10px; border-left: 3px solid var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── UTIL ── */
+.mono { font-family: 'JetBrains Mono', monospace; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 3h12M4 7h8M6 11h4" stroke="#0D1117" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="nav-logo-name">sieve<span>.</span></span>
+    <span class="nav-badge">beta</span>
+  </div>
+  <div class="nav-links">
+    <button class="nav-tab active" onclick="showPanel('home')">Overview</button>
+    <button class="nav-tab" onclick="showPanel('student')">For students</button>
+    <button class="nav-tab" onclick="showPanel('supervisor')">For supervisors</button>
+    <button class="nav-tab" onclick="showPanel('dept')">Department view</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════ HOME ══════════════════════════════════ -->
+<div id="panel-home" class="panel active">
+  <div class="hero">
+    <p class="hero-eyebrow">PhD admissions infrastructure</p>
+    <h1 class="hero-headline">Replace cold emails with<br><em>research fit signals</em></h1>
+    <p class="hero-sub">Supervisors spend 40% of their inbox on poorly-targeted PhD enquiries. Students get no signal on where to apply. Departments see nothing. Sieve fixes all three.</p>
+    <div class="hero-stats">
+      <div>
+        <span class="hero-stat-num">68<span>%</span></span>
+        <span class="hero-stat-label">of PhD cold emails ignored</span>
+      </div>
+      <div>
+        <span class="hero-stat-num">4.2<span>hr</span></span>
+        <span class="hero-stat-label">supervisor time wasted / week</span>
+      </div>
+      <div>
+        <span class="hero-stat-num">0</span>
+        <span class="hero-stat-label">departments have this data</span>
+      </div>
+    </div>
+    <button class="hero-cta" onclick="showPanel('student')">
+      Try the student demo
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </button>
+  </div>
+
+  <div class="how">
+    <p class="section-eyebrow">How it works</p>
+    <h2 class="section-title">Three problems. One infrastructure layer.</h2>
+    <p class="section-sub">Sieve replaces the cold email with a structured Research Fit Card, creating a two-sided signal that both parties can act on.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        </div>
+        <h4>Student builds a Research Fit Card</h4>
+        <p>Instead of drafting five different cold emails, a student fills in one structured profile — interests, methodology, background, goals — and gets instant match scores.</p>
+        <div class="step-connector">→</div>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <h4>Supervisor receives ranked cards</h4>
+        <p>Instead of an unstructured inbox, supervisors see a triage dashboard — ranked by fit, filterable by methodology and background, with one-click actions.</p>
+        <div class="step-connector">→</div>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
+        <h4>Department gets visibility</h4>
+        <p>For the first time, departments can see enquiry volume, fit distributions, and which supervisors are oversubscribed — turning a black box into actionable data.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ STUDENT ══════════════════════════════════ -->
+<div id="panel-student" class="panel">
+  <div class="student-layout">
+    <div>
+      <div class="form-panel">
+        <h2>Build your Research Fit Card</h2>
+        <p class="sub">Takes 2 minutes. Replaces five cold emails.</p>
+        <div class="field">
+          <label>Research interests</label>
+          <textarea id="s-interests" rows="3" placeholder="e.g. I'm interested in how digital platforms create and capture value, particularly in emerging markets where infrastructure constraints shape business model design..."></textarea>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Background</label>
+            <select id="s-bg">
+              <option value="">Select...</option>
+              <option>Engineering</option>
+              <option>Management / Business</option>
+              <option>Computer Science</option>
+              <option>Natural Sciences</option>
+              <option>Social Sciences</option>
+              <option>Economics</option>
+              <option>Design</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Methodology</label>
+            <select id="s-method">
+              <option value="">Select...</option>
+              <option>Quantitative / Data</option>
+              <option>Qualitative / Cases</option>
+              <option>Mixed methods</option>
+              <option>Lab / Experimental</option>
+              <option>Computational</option>
+              <option>Design / Prototyping</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Career goal after PhD</label>
+          <input type="text" id="s-goals" placeholder="e.g. academic researcher, deep tech startup, policy...">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="matchStudent()">Generate matches →</button>
+          <button class="btn" onclick="clearStudent()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div id="student-results">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Fill in your profile to see ranked supervisor matches
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ SUPERVISOR ══════════════════════════════════ -->
+<div id="panel-supervisor" class="panel">
+  <div class="sup-layout">
+    <div class="sup-sidebar">
+      <div class="sidebar-card">
+        <h3>Your profile</h3>
+        <div class="field">
+          <label>Select supervisor</label>
+          <select id="sup-select" onchange="onSupSelect()">
+            <option value="">— Choose —</option>
+          </select>
+        </div>
+        <div id="sup-seeking-wrap" style="display:none">
+          <div class="field" style="margin-top:10px">
+            <label>Currently seeking</label>
+            <textarea id="sup-seeking" rows="2" placeholder="Strong quantitative background, interest in platform dynamics..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-card" id="pref-card" style="display:none">
+        <h3>Match priorities</h3>
+        <div class="pref-row">
+          <span class="pref-label">Research fit</span>
+          <input type="range" id="w-fit" min="1" max="5" value="5" oninput="updatePref(this,'l-fit')">
+          <span class="pref-val" id="l-fit">Critical</span>
+        </div>
+        <div class="pref-row">
+          <span class="pref-label">Track record</span>
+          <input type="range" id="w-track" min="1" max="5" value="4" oninput="updatePref(this,'l-track')">
+          <span class="pref-val" id="l-track">Important</span>
+        </div>
+        <div class="pref-row">
+          <span class="pref-label">Industry exp.</span>
+          <input type="range" id="w-ind" min="1" max="5" value="3" oninput="updatePref(this,'l-ind')">
+          <span class="pref-val" id="l-ind">Average</span>
+        </div>
+        <div class="pref-row">
+          <span class="pref-label">Methodology</span>
+          <input type="range" id="w-meth" min="1" max="5" value="3" oninput="updatePref(this,'l-meth')">
+          <span class="pref-val" id="l-meth">Average</span>
+        </div>
+        <div class="pref-row">
+          <span class="pref-label">Motivation</span>
+          <input type="range" id="w-mot" min="1" max="5" value="4" oninput="updatePref(this,'l-mot')">
+          <span class="pref-val" id="l-mot">Important</span>
+        </div>
+        <hr class="divider">
+        <div class="stat-row">
+          <div class="stat-box"><span class="n">8</span><span class="l">cards received</span></div>
+          <div class="stat-box"><span class="n" style="color:var(--green)">3</span><span class="l">strong fit</span></div>
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-primary" style="width:100%" onclick="viewInbox()">View inbox →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="supervisor-results">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
+        Select your profile to view your matched applicant inbox
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ DEPARTMENT ══════════════════════════════════ -->
+<div id="panel-dept" class="panel">
+  <div class="dept-layout">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
+      <div>
+        <p class="section-eyebrow">Department dashboard</p>
+        <h2 class="section-title" style="font-size:1.25rem;margin-bottom:0">Institute for Manufacturing — Admissions Intelligence</h2>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3)">Cycle: 2025–26 &nbsp;·&nbsp; Live</div>
+    </div>
+
+    <div class="dept-grid">
+      <div class="dept-stat">
+        <span class="big">347</span>
+        <div class="label">Total enquiries received</div>
+        <span class="delta">↑ 23% vs last cycle</span>
+      </div>
+      <div class="dept-stat">
+        <span class="big"><span class="accent">41%</span></span>
+        <div class="label">Strong-fit candidates (≥70%)</div>
+        <span class="delta">↑ 12pts with Sieve</span>
+      </div>
+      <div class="dept-stat">
+        <span class="big">18</span>
+        <div class="label">Supervisors active on platform</div>
+        <span class="delta">of 30 total</span>
+      </div>
+    </div>
+
+    <div class="dept-chart-row">
+      <div class="chart-card">
+        <h4>Enquiries by supervisor — top 10</h4>
+        <div class="bar-chart" id="bar-chart"></div>
+      </div>
+      <div class="chart-card">
+        <h4>Applicant funnel</h4>
+        <div class="funnel" id="funnel-chart"></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h4>Supervisor capacity overview</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Supervisor</th>
+            <th>Enquiries</th>
+            <th>Strong fit</th>
+            <th>Slots</th>
+            <th>Capacity</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="dept-table"></tbody>
+      </table>
+    </div>
+
+    <div class="ask-claude" style="margin-top:0">
+      <div class="ask-claude-text"><strong>Ask Claude to analyse this cycle</strong> — generate a written admissions intelligence brief, flag capacity mismatches, or draft a message to undersubscribed supervisors</div>
+      <button class="btn btn-accent" style="font-size:12px;padding:7px 14px" onclick="sendDeptBrief()">Generate brief ↗</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PROFESSORS = [
+  {name:"Prof. Alexandra Brintrup",title:"Digital Manufacturing",url:"https://www.ifm.eng.cam.ac.uk/people/ab702/",areas:["supply chain","AI","machine learning","predictive analytics","complex networks","resilience","digital manufacturing","optimisation","logistics"]},
+  {name:"Prof. Thomas Bohné",title:"Human Factors & AI",url:"https://www.ifm.eng.cam.ac.uk/people/tmb35/",areas:["human-robot collaboration","future of work","AI ethics","digital transformation","workforce","augmented intelligence","human factors","robotics"]},
+  {name:"Prof. Ronan Daly",title:"Fluids in Advanced Manufacturing",url:"https://www.ifm.eng.cam.ac.uk/people/rd439/",areas:["inkjet printing","bioprinting","diagnostics","microfluidics","additive manufacturing","nano-manufacturing","printed electronics"]},
+  {name:"Prof. Michael De Volder",title:"NanoManufacturing",url:"https://www.ifm.eng.cam.ac.uk/people/mfld2/",areas:["nanomaterials","carbon nanotubes","energy storage","batteries","flexible electronics","nano-manufacturing","MEMS"]},
+  {name:"Prof. Steve Evans",title:"Industrial Sustainability",url:"https://www.ifm.eng.cam.ac.uk/people/se321/",areas:["industrial sustainability","circular economy","servitisation","business models","sustainable manufacturing","net zero","decarbonisation"]},
+  {name:"Prof. Lili Jia",title:"Industrial Photonics",url:"https://www.ifm.eng.cam.ac.uk/people/lj340/",areas:["photonics","laser manufacturing","optical metrology","laser materials processing","ultrafast lasers"]},
+  {name:"Prof. Timos Kipouros",title:"Computational Engineering",url:"https://www.ifm.eng.cam.ac.uk/people/tk291/",areas:["computational engineering","design optimisation","simulation","multi-objective optimisation","process simulation"]},
+  {name:"Prof. Harri Lorentz",title:"Supply Chain Management",url:"https://www.ifm.eng.cam.ac.uk/people/hl366/",areas:["supply chain management","logistics","procurement","global supply chains","operations management"]},
+  {name:"Prof. Katharina Luban",title:"Technology Enterprise",url:"https://www.ifm.eng.cam.ac.uk/people/kl630/",areas:["technology entrepreneurship","innovation ecosystems","startup","venture","deep tech","commercialisation"]},
+  {name:"Prof. Duncan McFarlane",title:"Industrial Information Engineering",url:"https://www.ifm.eng.cam.ac.uk/people/dm114/",areas:["industrial IoT","smart manufacturing","digital twin","automation","cyber-physical systems","asset management","RFID"]},
+  {name:"Prof. Tim Minshall",title:"Technology Management",url:"https://www.ifm.eng.cam.ac.uk/people/thwm100/",areas:["technology management","innovation management","open innovation","university-industry","R&D strategy","deep tech"]},
+  {name:"Prof. James Moultrie",title:"Design Management",url:"https://www.ifm.eng.cam.ac.uk/people/jm329/",areas:["design management","product design","design strategy","creative industries","design leadership"]},
+  {name:"Prof. Andy Neely",title:"Strategy & Performance",url:"https://www.ifm.eng.cam.ac.uk/people/adn1000/",areas:["performance measurement","servitisation","business models","operations management","service innovation"]},
+  {name:"Prof. Bill O'Neill",title:"Laser Manufacturing",url:"https://www.ifm.eng.cam.ac.uk/people/wo207/",areas:["laser manufacturing","additive manufacturing","3D printing","industrial lasers","laser sintering"]},
+  {name:"Prof. Eoin O'Sullivan",title:"Science & Innovation Policy",url:"https://www.ifm.eng.cam.ac.uk/people/eo252/",areas:["science policy","innovation policy","industrial policy","technology policy","university commercialisation"]},
+  {name:"Prof. Ajith Parlikad",title:"Asset Management",url:"https://www.ifm.eng.cam.ac.uk/people/aknp2/",areas:["asset management","predictive maintenance","condition monitoring","digital twin","IoT","infrastructure"]},
+  {name:"Prof. Rob Phaal",title:"Technology Management",url:"https://www.ifm.eng.cam.ac.uk/people/rp108/",areas:["technology roadmapping","strategic planning","technology management","innovation management","roadmapping"]},
+  {name:"Prof. Paavo Ritala",title:"Innovation Ecosystems",url:"https://www.ifm.eng.cam.ac.uk/people/ptr22/",areas:["coopetition","ecosystems","platform strategy","innovation ecosystems","knowledge creation","platforms"]},
+  {name:"Prof. Jagjit Singh Srai",title:"International Manufacturing",url:"https://www.ifm.eng.cam.ac.uk/people/jss46/",areas:["supply chain design","global manufacturing","supply chain strategy","reshoring","pharmaceutical supply chains"]},
+  {name:"Prof. Frank Tietze",title:"Innovation & IP",url:"https://www.ifm.eng.cam.ac.uk/people/ft263/",areas:["intellectual property","open innovation","IP strategy","technology transfer","patent analytics"]},
+  {name:"Prof. Chander Velu",title:"Business Model Innovation",url:"https://www.ifm.eng.cam.ac.uk/people/cv236/",areas:["business model innovation","digital platforms","value creation","strategy","service systems","fintech","business models","platform"]},
+  {name:"Prof. Mohamed Zaki",title:"AI & Service Innovation",url:"https://www.ifm.eng.cam.ac.uk/people/mehyz2/",areas:["machine learning","customer analytics","AI","data science","service innovation","deep learning","NLP","generative AI"]},
+  {name:"Prof. Ian Hutchings",title:"Inkjet Research",url:"https://www.ifm.eng.cam.ac.uk/people/imh2/",areas:["inkjet printing","tribology","surface engineering","printed electronics","fluid dynamics"]},
+  {name:"Prof. Stephan Henneberg",title:"Business Networks",url:"https://www.ifm.eng.cam.ac.uk/people/sh10012/",areas:["business networks","B2B marketing","service ecosystems","relationship management","industrial marketing"]},
+  {name:"Prof. Janet McColl-Kennedy",title:"Service Innovation",url:"https://www.ifm.eng.cam.ac.uk/people/jm977/",areas:["service innovation","customer value","healthcare services","transformative services","wellbeing","service systems"]},
+  {name:"Prof. Erik G. Hansen",title:"Sustainable Innovation",url:"https://www.ifm.eng.cam.ac.uk/people/egh36/",areas:["sustainable innovation","circular economy","corporate sustainability","green business models","ESG"]},
+  {name:"Prof. Mike Gregory",title:"Manufacturing Strategy",url:"https://www.ifm.eng.cam.ac.uk/people/mjg1000/",areas:["manufacturing strategy","international manufacturing","industrial policy","global operations","manufacturing competitiveness"]},
+  {name:"Prof. Issachar Gilad",title:"Ergonomics & Human Factors",url:"https://www.ifm.eng.cam.ac.uk/people/ig315/",areas:["ergonomics","human factors","manufacturing systems","occupational health","workplace design"]},
+  {name:"Prof. Karel Kruger",title:"Industrial AI",url:"https://www.ifm.eng.cam.ac.uk/people/kk829/",areas:["industrial AI","machine learning in manufacturing","smart factories","Industry 4.0","predictive quality"]},
+  {name:"Prof. Ove Granstrand",title:"IP & Technology Strategy",url:"https://www.ifm.eng.cam.ac.uk/people/sog22/",areas:["intellectual property","technology management","patents","innovation management","corporate technology strategy"]},
+];
+
+const DEMO_STUDENTS = [
+  {name:"Arjun Mehta",bg:"Management / Business",method:"Quantitative / Data",interests:"business model innovation in digital health platforms, value co-creation and ecosystem design",goals:"academic research"},
+  {name:"Sophie Laurent",bg:"Computer Science",method:"Computational",interests:"machine learning for supply chain resilience and network disruption prediction",goals:"industry R&D"},
+  {name:"Wei Chen",bg:"Engineering",method:"Mixed methods",interests:"digital twins and IoT sensors for predictive maintenance of civil infrastructure",goals:"consultancy"},
+  {name:"Fatima Al-Rashid",bg:"Economics",method:"Qualitative / Cases",interests:"platform strategy and coopetition dynamics in fintech and open banking",goals:"academic research"},
+  {name:"Tom Birchall",bg:"Natural Sciences",method:"Lab / Experimental",interests:"nano-manufacturing techniques for energy storage in flexible wearable devices",goals:"deep tech startup"},
+  {name:"Priya Nair",bg:"Social Sciences",method:"Qualitative / Cases",interests:"sustainable business models and circular economy transitions in global supply chains",goals:"policy / government"},
+  {name:"Luca Ferrari",bg:"Engineering",method:"Quantitative / Data",interests:"laser additive manufacturing process optimisation and AI-based quality prediction",goals:"industry R&D"},
+  {name:"Yuki Tanaka",bg:"Management / Business",method:"Mixed methods",interests:"technology roadmapping and strategic planning for deep tech venture portfolios",goals:"management consultancy"},
+];
+
+const PREF_LABELS = ['','Low','Below avg','Average','Important','Critical'];
+
+function tok(text){
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(s=>s.length>2);
+}
+function scoreMatch(tokens, areas){
+  let hits=new Set(), hitAreas=[];
+  const joined=tokens.join(' ');
+  for(const area of areas){
+    const al=area.toLowerCase(); let matched=false;
+    if(joined.includes(al)){matched=true; al.split(' ').forEach(w=>w.length>2&&hits.add(w));}
+    for(const t of tokens){if(al.includes(t)){matched=true;hits.add(t);}}
+    if(matched&&!hitAreas.includes(area))hitAreas.push(area);
+  }
+  return {score:Math.min(97,Math.round((hits.size/Math.max(tokens.length,1))*72+hitAreas.length*10)), hitAreas};
+}
+function initials(name){
+  const c=name.replace(/^(Prof\.|Professor|Dr|Sir)\s+/i,'').trim().split(' ').filter(Boolean);
+  return ((c[0]||'')[0]+(c[c.length-1]||'')[0]||'').toUpperCase();
+}
+function tier(s){return s>=65?'high':s>=35?'med':'low';}
+function tierLabel(s){return s>=65?'Strong fit':s>=35?'Possible fit':'Weak fit';}
+
+// Populate supervisor dropdown immediately
+(function(){
+  const sel=document.getElementById('sup-select');
+  PROFESSORS.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.name;sel.appendChild(o);});
+})();
+
+function showPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>{
+    t.classList.toggle('active',['home','student','supervisor','dept'][i]===id);
+  });
+  if(id==='dept') buildDeptDashboard();
+}
+
+function updatePref(input,labelId){
+  document.getElementById(labelId).textContent=PREF_LABELS[+input.value];
+}
+
+function onSupSelect(){
+  const v=document.getElementById('sup-select').value;
+  const show=v!=='';
+  document.getElementById('sup-seeking-wrap').style.display=show?'block':'none';
+  document.getElementById('pref-card').style.display=show?'block':'none';
+  document.getElementById('supervisor-results').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;stroke:#C8CAD4;margin:0 auto 10px;display:block"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>Click "View inbox" to see matched applicants</div>';
+}
+
+// Signal meter bars
+function signalBars(score, id){
+  const lit=Math.round((score/100)*5);
+  const heights=[10,14,18,22,26];
+  return `<div class="signal-meter" id="meter-${id}">`+
+    Array.from({length:5},(_,i)=>
+      `<div class="signal-bar${i<lit?' lit':''}" style="height:${heights[i]}px"></div>`
+    ).join('')+
+  `</div><div class="match-score-label">${score}%</div>`;
+}
+
+function matchStudent(){
+  const interests=document.getElementById('s-interests').value.trim();
+  if(!interests){showToast('Please describe your research interests first.');return;}
+  const combined=[interests,document.getElementById('s-bg').value,document.getElementById('s-method').value,document.getElementById('s-goals').value].join(' ');
+  const tokens=tok(combined);
+  const scored=PROFESSORS.map(p=>{const r=scoreMatch(tokens,p.areas);return{p,...r};})
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,5);
+
+  if(!scored.length){document.getElementById('student-results').innerHTML='<div class="empty-state">No matches found — try different keywords.</div>';return;}
+
+  const bg=document.getElementById('s-bg').value||'Not specified';
+  const meth=document.getElementById('s-method').value||'Not specified';
+  const goals=document.getElementById('s-goals').value||'Not specified';
+  const topList=scored.map(x=>`${x.p.name} (${x.score}%, areas: ${x.hitAreas.slice(0,3).join(', ')})`).join('\n');
+  const askMsg=`Student Research Fit Card:\n• Interests: ${interests}\n• Background: ${bg}\n• Methodology: ${meth}\n• Goal: ${goals}\n\nTop supervisor matches:\n${topList}\n\nFor each match: (1) 2-sentence explanation of fit, (2) one specific PhD project angle to pitch, (3) priority level — High / Realistic / Stretch.`;
+
+  // Best match fit card
+  const best=scored[0];
+  const fitCard=`
+    <div class="fit-card-wrap">
+      <div class="fit-card-header">
+        <span class="fit-card-label">Research Fit Card — ready to send</span>
+        <span class="fit-card-badge">${best.score}% match</span>
+      </div>
+      <div class="fit-card-name">${best.p.name}</div>
+      <div class="fit-card-sub">${best.p.title} · Cambridge IfM</div>
+      <div class="fit-card-meta">
+        <span class="fit-card-pill">${bg}</span>
+        <span class="fit-card-pill">${meth}</span>
+        <span class="fit-card-pill">Goal: ${goals}</span>
+      </div>
+      <div class="fit-card-section">
+        <label>Research interest summary</label>
+        <p>${interests.slice(0,200)}${interests.length>200?'…':''}</p>
+      </div>
+      <div class="fit-card-section">
+        <label>Matched research areas</label>
+        <p>${best.hitAreas.join(' · ')}</p>
+      </div>
+      <div class="fit-card-actions">
+        <button class="fit-card-btn send" onclick="showToast('Fit Card sent to ${best.p.name} ✓')">Send Fit Card</button>
+        <button class="fit-card-btn preview" onclick="sendPrompt(${JSON.stringify(askMsg)})">Get project ideas ↗</button>
+      </div>
+    </div>`;
+
+  document.getElementById('student-results').innerHTML=
+    `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:600">Top ${scored.length} matches</span>
+      <span class="mono" style="font-size:11px;color:var(--text-3)">${scored.length} of ${PROFESSORS.length} supervisors</span>
+    </div>
+    <div class="match-list">`+
+    scored.map(({p,score,hitAreas},i)=>{
+      const ini=initials(p.name);
+      const tags=p.areas.map(a=>`<span class="tag${hitAreas.includes(a)?' hit':''}">${a}</span>`).join('');
+      return `<div class="match-card${i===0?' rank-1':''}">
+        <div class="match-top">
+          <div class="avatar">${ini}</div>
+          <div class="match-info">
+            <a class="match-name" href="${p.url}" target="_blank">${p.name}</a>
+            <div class="match-sub">${p.title}</div>
+          </div>
+          <div class="match-signal-wrap">
+            ${signalBars(score,'s'+i)}
+          </div>
+        </div>
+        <div class="tags">${tags}</div>
+        ${i===0?fitCard:''}
+      </div>`;
+    }).join('')+
+    `<div class="ask-claude">
+      <div class="ask-claude-text"><strong>Want personalised project ideas?</strong> Claude will explain each match and suggest a specific research angle to pitch.</div>
+      <button class="btn btn-accent" style="font-size:12px;padding:7px 14px" onclick="sendPrompt(${JSON.stringify(askMsg)})">Ask Claude ↗</button>
+    </div>
+    </div>`;
+}
+
+function viewInbox(){
+  const idx=document.getElementById('sup-select').value;
+  if(idx===''){showToast('Please select a supervisor first.');return;}
+  const prof=PROFESSORS[+idx];
+  const seeking=document.getElementById('sup-seeking').value.trim();
+
+  const students=DEMO_STUDENTS.map(s=>{
+    const {score,hitAreas}=scoreMatch(tok([s.interests,s.bg,s.method,s.goals].join(' ')),prof.areas);
+    return{...s,score,hitAreas};
+  }).sort((a,b)=>b.score-a.score);
+
+  const highN=students.filter(s=>s.score>=65).length;
+  const askMsg=`I am ${prof.name} at Cambridge IfM (${prof.title}).\nResearch areas: ${prof.areas.slice(0,5).join(', ')}${seeking?'\nSeeking: '+seeking:''}\n\nRanked applicant cards:\n`+
+    students.map(s=>`${s.name} (${s.score}%): "${s.interests}" — ${s.bg}, ${s.method}, goal: ${s.goals}`).join('\n')+
+    `\n\nFor each: (1) 2-sentence triage note on fit, (2) one sharp question to ask in first reply, (3) verdict: Invite to call / Request more info / Decline.`;
+
+  document.getElementById('supervisor-results').innerHTML=
+    `<div class="inbox">
+      <div class="inbox-header">
+        <div>
+          <div class="inbox-title">Applicant inbox</div>
+          <div class="inbox-subtitle">${prof.name} · ${students.length} cards received${highN?' · ':''}<span style="color:var(--green);font-weight:500">${highN?highN+' strong fit':''}</span></div>
+        </div>
+        <div class="inbox-actions">
+          <button class="btn" style="font-size:12px;padding:6px 12px">Filter</button>
+          <button class="btn btn-primary" style="font-size:12px;padding:6px 12px" onclick="sendPrompt(${JSON.stringify(askMsg)})">AI triage all ↗</button>
+        </div>
+      </div>`+
+    students.map(s=>{
+      const t=tier(s.score);
+      const tags=s.hitAreas.length?`<div class="tags" style="margin-top:6px">${s.hitAreas.map(a=>`<span class="tag hit">${a}</span>`).join('')}</div>`:'';
+      return `<div class="inbox-card tier-${t}">
+        <div>
+          <div class="inbox-name">${s.name}</div>
+          <div class="inbox-meta">${s.bg} · ${s.method} · Goal: ${s.goals}</div>
+          <div class="inbox-excerpt">${s.interests}</div>
+          ${tags}
+          <div class="inbox-card-actions">
+            <button class="action-btn invite" onclick="showToast('Interview invite sent to ${s.name}')">Invite to call</button>
+            <button class="action-btn" onclick="showToast('Follow-up sent to ${s.name}')">Request more info</button>
+            <button class="action-btn decline" onclick="showToast('Polite decline sent to ${s.name}')">Decline</button>
+          </div>
+        </div>
+        <div class="inbox-score-col">
+          <span class="tier-badge ${t}">${tierLabel(s.score)}</span>
+          <div class="match-signal-wrap">${signalBars(s.score,'sv'+s.name.replace(/\s/g,''))}</div>
+        </div>
+      </div>`;
+    }).join('')+
+    `<div class="ask-claude">
+      <div class="ask-claude-text"><strong>Run AI triage across all ${students.length} applicants</strong> — get a ranked brief with one-line notes and suggested reply drafts.</div>
+      <button class="btn btn-accent" style="font-size:12px;padding:7px 14px" onclick="sendPrompt(${JSON.stringify(askMsg)})">Ask Claude to triage ↗</button>
+    </div></div>`;
+}
+
+// Department dashboard
+function buildDeptDashboard(){
+  const supervisors=[
+    {name:"Prof. Chander Velu",enquiries:42,strongFit:18,slots:2,filled:1},
+    {name:"Prof. Mohamed Zaki",enquiries:38,strongFit:14,slots:2,filled:2},
+    {name:"Prof. Alexandra Brintrup",enquiries:35,strongFit:15,slots:1,filled:1},
+    {name:"Prof. Steve Evans",enquiries:31,strongFit:12,slots:3,filled:1},
+    {name:"Prof. Ajith Parlikad",enquiries:28,strongFit:9,slots:2,filled:0},
+    {name:"Prof. Duncan McFarlane",enquiries:24,strongFit:8,slots:1,filled:1},
+    {name:"Prof. Paavo Ritala",enquiries:21,strongFit:11,slots:2,filled:0},
+    {name:"Prof. Timos Kipouros",enquiries:19,strongFit:6,slots:1,filled:0},
+    {name:"Prof. Rob Phaal",enquiries:17,strongFit:5,slots:1,filled:0},
+    {name:"Prof. Lili Jia",enquiries:12,strongFit:4,slots:1,filled:0},
+  ];
+  const maxE=supervisors[0].enquiries;
+  document.getElementById('bar-chart').innerHTML=supervisors.map(s=>`
+    <div class="bar-row">
+      <span class="bar-label" title="${s.name}">${s.name.replace('Prof. ','')}</span>
+      <div class="bar-track"><div class="bar-fill${s.filled>=s.slots&&s.slots>0?' muted':s.enquiries===maxE?' accent':''}" style="width:${Math.round(s.enquiries/maxE*100)}%"></div></div>
+      <span class="bar-num">${s.enquiries}</span>
+    </div>`).join('');
+
+  const funnel=[
+    {label:'Enquiries received',n:347,pct:100,color:'#0D1117'},
+    {label:'Opened by supervisor',n:289,pct:83,color:'#2D3748'},
+    {label:'Replied to',n:156,pct:45,color:'#534AB7'},
+    {label:'Invited to call',n:62,pct:18,color:'#B8FF4F'},
+    {label:'Formal application',n:28,pct:8,color:'#12B76A'},
+  ];
+  document.getElementById('funnel-chart').innerHTML=funnel.map(f=>`
+    <div class="funnel-row">
+      <span class="funnel-label">${f.label}</span>
+      <div class="funnel-bar-wrap"><div class="funnel-fill" style="width:${f.pct}%;background:${f.color};height:4px;border-radius:2px"></div></div>
+      <span class="funnel-num">${f.n}</span>
+    </div>`).join('');
+
+  document.getElementById('dept-table').innerHTML=supervisors.map(s=>{
+    const over=s.filled>s.slots;
+    const full=s.filled===s.slots&&s.slots>0;
+    const status=over?'Over capacity':full?'Full':'Has capacity';
+    const dotCls=over?'dot-amber':full?'dot-gray':'dot-green';
+    const caps=Array.from({length:Math.max(s.slots,s.filled)},(_,i)=>`<div class="cap-seg${i<s.filled?(over?' over':' filled'):''}"></div>`).join('');
+    return `<tr>
+      <td>${s.name}</td>
+      <td><span class="mono">${s.enquiries}</span></td>
+      <td><span class="mono" style="color:var(--green)">${s.strongFit}</span></td>
+      <td><span class="mono">${s.slots}</span></td>
+      <td><div class="capacity-bar">${caps}</div></td>
+      <td><span class="status-dot ${dotCls}"></span>${status}</td>
+    </tr>`;
+  }).join('');
+}
+
+function sendDeptBrief(){
+  const msg=`You are an admissions analyst. Generate a concise 3-paragraph admissions intelligence brief for the Cambridge IfM based on this cycle data:\n\n- 347 total enquiries received (up 23%)\n- 41% strong-fit candidates (≥70% match score)\n- Top enquiry volume: Prof. Velu (42), Prof. Zaki (38), Prof. Brintrup (35)\n- Supervisors with open capacity but low enquiries: Prof. Kipouros (19 enquiries, 1 slot open), Prof. Phaal (17 enquiries, 1 slot open)\n- Overall funnel: 347 enquiries → 62 call invites → 28 formal applications\n\nThe brief should: (1) summarise the cycle health, (2) flag capacity mismatches and suggest actions, (3) recommend one structural change for next cycle. Write in a professional but direct tone, as if addressing the head of postgraduate admissions.`;
+  sendPrompt(msg);
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function clearStudent(){
+  ['s-interests','s-goals'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s-bg').value='';
+  document.getElementById('s-method').value='';
+  document.getElementById('student-results').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;stroke:#C8CAD4;margin:0 auto 10px;display:block"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Fill in your profile to see ranked supervisor matches</div>';
+}
+</script>
+</body>
+</html>
